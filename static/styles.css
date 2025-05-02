@@ -53,3 +53,12 @@ main {
     width: 60px;
     height: 30px;
 }
+
+.log-card {
+    width: '100%';
+    max-width: '410px'
+}
+
+.no-cuenta-a{
+    color: gray;
+}

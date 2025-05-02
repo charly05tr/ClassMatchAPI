@@ -1,6 +1,7 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+from models.project import Project
 
 project_user = db.Table('project_user',
     db.Column('user_id',db.Integer, db.ForeignKey('user.id'), primary_key=True),
@@ -15,7 +16,7 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(50), nullable = False)
     _password = db.Column("password_hash", db.String(128), nullable=False)
     
-    projects = db.relationship('project', secondary=project_user, backref='users')
+    projects = db.relationship('Project', secondary=project_user, backref='users')
     
     def serializer(self):
         return {

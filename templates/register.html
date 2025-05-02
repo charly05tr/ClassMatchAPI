@@ -1,24 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <title>Register</title>
 </head>
+
 <body>
-    <h1>Registrarse</h1>
-<form method="post" action="/register">
-    <div class="form-group">
-        <input class="form-control" type="email" name="email" placeholder="Email Address">
-    </div>
-    <div class="form-group">
-        <input class="form-control" type="password" name="password" placeholder="Password">
-    </div>
-    <div class="form-group">
-        <input class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
-    </div>
-    <input class="btn btn-primary" type="submit" value="Register">
-    Already have an account? <a href="/login">Log In here.</a>
-</form>
+    <div id="App"></div>
+
+    <script type="text/babel">
+        function RegisterForm() {
+            const [userName, setUserName] = React.useState('')
+            const [email, setEmail] = React.useState('')
+            const [password, setPassword] = React.useState('')
+            const [confirmation, setConfirmation] = React.useState('')
+            const [message, setMessage] = React.useState('')
+            const [name, setName] = React.useState('')
+            const [firstName, setFirstName] = React.useState('')
+
+            const handleSubmit = async (e) => {
+                e.preventDefault()
+                try {
+                    const res = await fetch('http://localhost:5000/register', {
+                        method: "POST",
+                        headers: {
+                            "content-type": "application/json"
+                        },
+                        credentials: "include",
+                        body: JSON.stringify({
+                            'user_name':userName,
+                            'email':email,
+                            'password':password,
+                            'name': name,
+                            'first_name': firstName
+                        })
+                    })
+                    const data = await res.json()
+                    if (res.ok) {
+                        setMessage('successfully register')
+                        window.location.href = "/"
+                    }
+                    else {
+                        setMessage(data.error || 'error at registration')
+                    }
+                }
+                catch (err) {
+                    setMessage('Internal server or connection error')
+                }
+            }
+
+            return (
+                <div>
+                    <form onSubmit={handleSubmit}>
+                        <input id='reg-name' type='text' placeholder='Name' onChange={(e) => setName(e.target.value)} value={name} required></input>
+                        <input id='reg-first-name' type='text' placeholder='First Name' onChange={(e) => setFirstName(e.target.value)} value={firstName} required></input>
+                        <input id='reg-username' type='text' placeholder='Username' onChange={(e) => setUserName(e.target.value)} value={userName} required></input>
+                        <input id='reg-email' type='email' placeholder='Email' onChange={(e) => setEmail(e.target.value)} value={email} required></input>
+                        <input id='reg-password' type='password' placeholder='Password' onChange={(e) => setPassword(e.target.value)} value={password} required></input>
+                        <input id='reg-confirm' type='password' placeholder='Confirm Password' onChange={(e) => setConfirmation(e.target.value)} value={confirmation} required></input>
+                        <button id='reg-submit' type='submit'>Register</button>
+                    </form>
+                    {message && <p>{message}</p>}
+                </div>
+            )
+        }
+        ReactDOM.createRoot(document.getElementById("App")).render(<RegisterForm />)
+    </script>
 </body>
+
 </html>
