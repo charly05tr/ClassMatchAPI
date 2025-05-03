@@ -10,8 +10,8 @@ class Message(db.Model):
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
-    receiver = db.relationship('User', foreign_keys=[receiver_id], backref='received_messages')
+    sender = db.relationship('User', foreign_keys=[sender_id], back_populates='sent_messages')
+    receiver = db.relationship('User', foreign_keys=[receiver_id], back_populates='received_messages')
     
     def serializer(self):
         return {

@@ -8,8 +8,8 @@ class Match(db.Model):
     matched_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    user = db.relationship('User', foreign_keys=[user_id], backref='matches')
-    matched_user = db.relationship('User', foreign_keys=[matched_user_id], backref='matched_users')
+    user = db.relationship('User', foreign_keys=[user_id], back_populates='sent_matches', overlaps="matches")
+    matched_user = db.relationship('User', foreign_keys=[matched_user_id], back_populates='received_matches', overlaps="matches")
 
     def serializer(self):
         return {
