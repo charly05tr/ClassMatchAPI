@@ -39,12 +39,14 @@ def index():
     result = []
     for user in users:
         result.append({
+            'id': user.id,  
             "name": user.name,
             "profesion": user.profesion,
             "profile_picture": user.profile_picture,
-            "match_count": len(user.matches),
-            "projects_count": len(user.projects),
-            "skills": user.skills
+            "match_count": len(user.sent_matches) + len(user.received_matches),
+            "projects_count": len(user.project_associations),
+            'first_name': user.first_name,
+            'user_name': user.user_name,
         })
     return jsonify(result)
 
@@ -53,52 +55,52 @@ def index():
 def chat():
     pass
 
-@app.route("/profile", methods=["GET", "POST", "PUT", "DELETE"])
+@app.route("/profile/<int:user_id>", methods=["GET", "POST", "PUT", "DELETE"])
 @login_required
-def profile():
+def profile(user_id):
+    user = User.query.get(user_id)
     if request.method == "GET":
         
-        return jsonify(current_user.serializer())
+        return jsonify(user.serializer())
 
-    elif request.method == "POST":
+    elif request.method == "POST" and current_user.id == user_id:
         data = request.get_json()
         optional_fields = [
-            "profile_description", "about_me", "profile_picture",
-            
+            "profile_description", "about_me", "profile_picture", 
             "education", "location", "skills",
             "profesion",
         ]
         for field in optional_fields:
             if field in data:                
-                 setattr(current_user, field, data[field])
+                 setattr(user, field, data[field])
         if "social_links" in data:
              social_links_from_frontend = data.get("social_links")
              if isinstance(social_links_from_frontend, list):
-                 current_user.social_links = json.dumps(social_links_from_frontend)
+                 user.social_links = json.dumps(social_links_from_frontend)
              elif social_links_from_frontend is None:
-                  current_user.social_links = None
+                  user.social_links = None
              else:
                  return jsonify({"error": "'social_links' field must be a list or null"}), 400
 
         if "experience" in data:
             work_experience_from_frontend = data.get("experience")
             if isinstance(work_experience_from_frontend, list):
-                current_user.experience = json.dumps(work_experience_from_frontend)
-                print(f"current_user.work_experience: {current_user.work_experience}")
+                user.experience = json.dumps(work_experience_from_frontend)
+                print(f"user.work_experience: {user.work_experience}")
             elif work_experience_from_frontend is None:
-                current_user.experience = None
+                user.experience = None
             else:
                 return jsonify({"error": "'work_experience' field must be a list or null"}), 400
         try:
-            db.session.add(current_user) 
+            db.session.add(user) 
             db.session.commit()
-            return jsonify(current_user.serializer()), 201 
+            return jsonify(user.serializer()), 201 
         except Exception as e:
             db.session.rollback()
             print(f"Error during profile POST commit: {e}")
             return jsonify({"error": "Error al crear el perfil.", "details": str(e)}), 500
 
-    elif request.method == "PUT":
+    elif request.method == "PUT" and current_user.id == user_id:
         data = request.get_json()
         editable_fields = [
             "user_name", "name", "first_name", "profile_description",
@@ -107,46 +109,46 @@ def profile():
         ]
         for field in editable_fields:
             if field in data:
-                setattr(current_user, field, data[field])
+                setattr(user, field, data[field])
         if "social_links" in data:
             social_links_from_frontend = data.get("social_links")
             if isinstance(social_links_from_frontend, list):             
-                current_user.social_links = json.dumps(social_links_from_frontend)
+                user.social_links = json.dumps(social_links_from_frontend)
             elif social_links_from_frontend is None:
-                current_user.social_links = None
+                user.social_links = None
             else:
                 return jsonify({"error": "'social_links' field must be a list or null"}), 400
 
         if "experience" in data:
             work_experience_from_frontend = data.get("experience")       
             if isinstance(work_experience_from_frontend, list):             
-                current_user.experience = json.dumps(work_experience_from_frontend)          
+                user.experience = json.dumps(work_experience_from_frontend)          
             elif work_experience_from_frontend is None:
-                current_user.experience = None
+                user.experience = None
             else:
                 return jsonify({"error": "'work_experience' field must be a list or null"}), 400   
         try:
-            db.session.add(current_user) 
+            db.session.add(user) 
             db.session.commit()
-            db.session.refresh(current_user)
+            db.session.refresh(user)
         except Exception as e:
             db.session.rollback()
             print(f"Error during profile PUT commit: {e}")
             return jsonify({"error": "Error al guardar el perfil en la base de datos.", "details": str(e)}), 500
         
-        return jsonify(current_user.serializer()), 200  
+        return jsonify(user.serializer()), 200  
 
-    elif request.method == "DELETE":      
+    elif request.method == "DELETE" and current_user.id == user_id:      
         fields_to_clear = [
             "profile_description", "about_me", "profile_picture",
             "education", "location", "skills",
             "profesion",             
         ]
         for field in fields_to_clear:             
-             if hasattr(current_user.__class__, field):
-                setattr(current_user, field, None)
+             if hasattr(user.__class__, field):
+                setattr(user, field, None)
         try:
-             db.session.add(current_user)
+             db.session.add(user)
              db.session.commit()
         except Exception as e:
              db.session.rollback()
@@ -193,7 +195,7 @@ def login():
         
     login_user(user)
     print(user.email)
-    print( current_user.is_authenticated)
+    print( user.is_authenticated)
     return jsonify({
         "message": "Login exitoso",
     }), 200
@@ -217,11 +219,11 @@ def debug():
     })  
     
 
-@app.route("/projects", methods=["GET", "PUT"])
+@app.route("/projects/<int:user_id>", methods=["GET", "PUT"])
 @login_required
-def user_projects():
+def user_projects(user_id):
 
-    user = current_user
+    user = User.query.get(user_id)
 
     if request.method == "GET":
         projects_list = []
@@ -233,7 +235,7 @@ def user_projects():
 
         return jsonify(projects_list), 200
 
-    elif request.method == "PUT":
+    elif request.method == "PUT" and current_user.id == user_id:
         data = request.get_json()
         if not data or 'projects' not in data or not isinstance(data['projects'], list):
             return jsonify({"error": "Formato de datos incorrecto. Se espera un objeto con una clave 'projects' que contenga una lista."}), 400
