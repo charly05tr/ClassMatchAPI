@@ -34,6 +34,17 @@ class User(UserMixin, db.Model):
     
     def serializer(self):
         social_links_list = []
+        experience_list = []
+        if self.experience: 
+            try:
+                parsed_experience = json.loads(self.experience)
+                if isinstance(parsed_experience, list):
+                    experience_list = parsed_experience
+                else:
+                     print(f"Warning: experience data for user {self.id} is not a list: {self.experience}")
+            except (json.JSONDecodeError, TypeError) as e:
+                print(f"Error decoding experience JSON for user {self.id}: {self.experience} - {e}")
+                experience_list = []
         if self.social_links:
             try:
                 parsed_links = json.loads(self.social_links)
@@ -64,7 +75,7 @@ class User(UserMixin, db.Model):
             "profile_description": self.profile_description,
             "about_me": self.about_me,
             "profile_picture": self.profile_picture,
-            "experience": self.experience,  
+            "experience": experience_list,  
             "location": self.location,
             "skills": self.skills, 
             "social_links": social_links_list,

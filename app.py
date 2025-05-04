@@ -59,57 +59,100 @@ def profile():
     if request.method == "GET":
         
         return jsonify(current_user.serializer())
-    
 
     elif request.method == "POST":
         data = request.get_json()
         optional_fields = [
             "profile_description", "about_me", "profile_picture",
-            "experience", "education", "location", "skills",
-            "profesion", "social_links"
+            
+            "education", "location", "skills",
+            "profesion",
         ]
         for field in optional_fields:
-            if field in data:
-                setattr(current_user, field, data[field])
-        db.session.commit()
-        return jsonify({"message": "Información adicional actualizada exitosamente"}), 200
+            if field in data:                
+                 setattr(current_user, field, data[field])
+        if "social_links" in data:
+             social_links_from_frontend = data.get("social_links")
+             if isinstance(social_links_from_frontend, list):
+                 current_user.social_links = json.dumps(social_links_from_frontend)
+             elif social_links_from_frontend is None:
+                  current_user.social_links = None
+             else:
+                 return jsonify({"error": "'social_links' field must be a list or null"}), 400
+
+        if "experience" in data:
+            work_experience_from_frontend = data.get("experience")
+            if isinstance(work_experience_from_frontend, list):
+                current_user.experience = json.dumps(work_experience_from_frontend)
+                print(f"current_user.work_experience: {current_user.work_experience}")
+            elif work_experience_from_frontend is None:
+                current_user.experience = None
+            else:
+                return jsonify({"error": "'work_experience' field must be a list or null"}), 400
+        try:
+            db.session.add(current_user) 
+            db.session.commit()
+            return jsonify(current_user.serializer()), 201 
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during profile POST commit: {e}")
+            return jsonify({"error": "Error al crear el perfil.", "details": str(e)}), 500
 
     elif request.method == "PUT":
         data = request.get_json()
         editable_fields = [
             "user_name", "name", "first_name", "profile_description",
-            "about_me", "profile_picture", "experience", "education",
-            "location", "skills", "profesion", "social_links"
+            "about_me", "profile_picture", "education",
+            "location", "skills", "profesion",
         ]
-        
         for field in editable_fields:
             if field in data:
                 setattr(current_user, field, data[field])
-        if "social_links" in data: 
-            social_links_from_frontend = data.get("social_links") 
-            print(f"social_links_from_frontend: {social_links_from_frontend}")
-        if isinstance(social_links_from_frontend, list):
-            current_user.social_links = json.dumps(social_links_from_frontend)
-        elif social_links_from_frontend is None:
-             current_user.social_links = None 
-        else:
-            return jsonify({"error": "'social_links' field must be a list or null"}), 400
-        db.session.commit()
-        
-        return jsonify({"message": "Perfil actualizado exitosamente"}), 200
+        if "social_links" in data:
+            social_links_from_frontend = data.get("social_links")
+            if isinstance(social_links_from_frontend, list):             
+                current_user.social_links = json.dumps(social_links_from_frontend)
+            elif social_links_from_frontend is None:
+                current_user.social_links = None
+            else:
+                return jsonify({"error": "'social_links' field must be a list or null"}), 400
 
-    elif request.method == "DELETE":
+        if "experience" in data:
+            work_experience_from_frontend = data.get("experience")       
+            if isinstance(work_experience_from_frontend, list):             
+                current_user.experience = json.dumps(work_experience_from_frontend)          
+            elif work_experience_from_frontend is None:
+                current_user.experience = None
+            else:
+                return jsonify({"error": "'work_experience' field must be a list or null"}), 400   
+        try:
+            db.session.add(current_user) 
+            db.session.commit()
+            db.session.refresh(current_user)
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during profile PUT commit: {e}")
+            return jsonify({"error": "Error al guardar el perfil en la base de datos.", "details": str(e)}), 500
+        
+        return jsonify(current_user.serializer()), 200  
+
+    elif request.method == "DELETE":      
         fields_to_clear = [
             "profile_description", "about_me", "profile_picture",
-            "experience", "education", "location", "skills",
-            "profesion", "social_links"
+            "education", "location", "skills",
+            "profesion",             
         ]
-        for field in fields_to_clear:
-            setattr(current_user, field, None)
-            
+        for field in fields_to_clear:             
+             if hasattr(current_user.__class__, field):
+                setattr(current_user, field, None)
+        try:
+             db.session.add(current_user)
+             db.session.commit()
+        except Exception as e:
+             db.session.rollback()
+             print(f"Error during profile DELETE commit: {e}")
+             return jsonify({"error": "Error al eliminar información del perfil.", "details": str(e)}), 500
 
-
-        db.session.commit()
         return jsonify({"message": "Información eliminada exitosamente"}), 200
 
 @app.route("/register", methods=["POST"])
