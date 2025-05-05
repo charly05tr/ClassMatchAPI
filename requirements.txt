@@ -1,0 +1,8 @@
+Flask
+Jinja2
+Flask-Migrate
+SQLAlchemy
+flask-cors
+gunicorn
+psycopg2-binary
+flask-login
