@@ -20,7 +20,8 @@ CORS(app, supports_credentials=True, resources={
     r"/*": {
         "origins": [
             "http://localhost:5173",                 
-            "https://classmatchapi-1.onrender.com"   
+            "https://classmatchapi-1.onrender.com" ,
+            "https://classmatch-5le0.onrender.com"  
         ]
     }
 })
