@@ -15,7 +15,14 @@ if db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 
 app.secret_key = '50d024439b6e1cf04cbe0c922c083cf2aa3eeca534b9a33b1b51f1af4c35ce9c'
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:5173"}})
+CORS(app, supports_credentials=True, resources={
+    r"/*": {
+        "origins": [
+            "http://localhost:5173",                 
+            "https://classmatchapi-1.onrender.com"   
+        ]
+    }
+})
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
