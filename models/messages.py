@@ -1,7 +1,6 @@
 from sqlalchemy.sql import func
 from app import db
-from models.user import User
-from models.project import Project
+
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -14,7 +14,7 @@ db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
 
-from models.messages import Message 
+from models.messages import Message
 from models.matches import Match
 from models.project import Project
 from models.user import User
