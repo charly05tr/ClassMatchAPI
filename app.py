@@ -1,17 +1,23 @@
 from flask import Flask, jsonify, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+from flask_migrate import Migrate, upgrade
 from flask_login import LoginManager
 from flask_login import login_user, login_required, logout_user, current_user
 from flask_cors import CORS
 import json
+import os
 app = Flask(__name__)
  
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///class_match.db'
+db_url = os.environ.get('DATABASE_URL', 'sqlite:///class_match.db')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+
 app.secret_key = '50d024439b6e1cf04cbe0c922c083cf2aa3eeca534b9a33b1b51f1af4c35ce9c'
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:5173"}})
-db = SQLAlchemy(app)
 
+db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 from models.messages import Message
@@ -24,6 +30,9 @@ from models.asociation import ProjectUserAssociation
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+def activate_migrations():
+    upgrade()
   
 with app.app_context():  
     db.create_all()  
