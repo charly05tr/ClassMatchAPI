@@ -7,7 +7,6 @@ from sqlalchemy.sql import func
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key = True)
-    user_name = db.Column(db.String(50), nullable = False)
     email = db.Column(db.String(100), nullable = False)
     name = db.Column(db.String(50), nullable = False)
     first_name = db.Column(db.String(50), nullable = False)
@@ -23,9 +22,8 @@ class User(UserMixin, db.Model):
     social_links = db.Column(db.Text(), nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, server_default=func.now())
     
-    
-    sent_messages = db.relationship('Message',foreign_keys='Message.sender_id',back_populates='sender',overlaps="receiver,messages",lazy=True)
-    received_messages = db.relationship('Message',foreign_keys='Message.receiver_id',back_populates='receiver',overlaps="sender,messages",lazy=True)
+    sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', back_populates='sender', lazy='dynamic')
+    conversation_participations = db.relationship('ConversationParticipant', back_populates='user', lazy='dynamic')
     
     sent_matches = db.relationship('Match',foreign_keys='Match.user_id',back_populates='user',overlaps="matched_user,matches",lazy=True)
     received_matches = db.relationship('Match',foreign_keys='Match.matched_user_id',back_populates='matched_user',overlaps="user,matches",lazy=True)
@@ -67,7 +65,6 @@ class User(UserMixin, db.Model):
                     collaborated_projects_list.append(association.project.serializer())
         return {
             "id": self.id,
-            "user_name": self.email,
             "profesion": self.profesion,
             "email": self.email,
             "name": self.name,
