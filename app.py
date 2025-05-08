@@ -15,7 +15,7 @@ app = Flask(__name__)
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///class_match.db')
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
-
+#test
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 
 app.secret_key = '50d024439b6e1cf04cbe0c922c083cf2aa3eeca534b9a33b1b51f1af4c35ce9c'
