@@ -168,3 +168,24 @@ def debug():
         "user_id": current_user.get_id() if current_user.is_authenticated else None
     })  
     
+    
+@user_bp.route('/search', methods=['GET'])
+@login_required 
+def search_users():
+    search_term = request.args.get('term', '').strip() #
+    if not search_term:
+        return jsonify({"message": ""}), 400
+
+    search_pattern = f"%{search_term}%"
+
+    users = User.query.filter(
+        or_(
+            User.name.ilike(search_pattern),
+            User.first_name.ilike(search_pattern),
+            User.profesion.ilike(search_pattern)
+            
+        ),
+        User.id != current_user.id
+    ).limit(20).all() 
+
+    return jsonify([user.serializer() for user in users]), 200
