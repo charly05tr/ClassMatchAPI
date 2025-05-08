@@ -24,7 +24,7 @@ class Conversation(db.Model):
             
         return {
             "id": self.id,
-            "name": self.name,
+            "name":  self.name if self.name else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "message_count": self.messages.count(),
             "participants": participants_data,

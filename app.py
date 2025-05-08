@@ -1,8 +1,10 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate, upgrade
+from flask import request
 from flask_login import LoginManager
 from flask_login import  login_required
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 import os
 
@@ -20,12 +22,24 @@ app.secret_key = '50d024439b6e1cf04cbe0c922c083cf2aa3eeca534b9a33b1b51f1af4c35ce
 CORS(app, supports_credentials=True, resources={
     r"/*": {
         "origins": [
-            "http://localhost:5173",
-            "http://localhost:5174", 
+            "http://0.0.0.0:5173",
+            "http://0.0.0.0:5174", 
+            'http://192.168.0.6:5173',
+            'http://localhost:5173',
             "https://classmatchapi-1.onrender.com", #
         ]
     }
 })
+socketio = SocketIO(app, cors_allowed_origins=[
+    "http://0.0.0.0:5173",
+    "http://192.168.0.6:5173",
+    "http://127.0.0.1:5173"
+])
+
+if __name__ == '__main__':
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 db = SQLAlchemy(app)
 
@@ -76,7 +90,7 @@ def index():
             'first_name': user.first_name,
         })
     return jsonify(result)
-
+    
 @app.route("/search", methods=["GET", "POST"])
 @login_required 
 def search():

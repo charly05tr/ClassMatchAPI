@@ -76,7 +76,7 @@ class User(UserMixin, db.Model):
             "location": self.location,
             "skills": self.skills, 
             "social_links": social_links_list,
-            "created_at": self.created_at,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
             "owned_projects": owned_projects_list,
             "collaborated_projects": collaborated_projects_list, 
             "projects_count": len(self.project_associations),
